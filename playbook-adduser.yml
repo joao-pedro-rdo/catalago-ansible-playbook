@@ -1,0 +1,44 @@
+---
+- name: Playbook para adicionar usuario nos servisores
+  hosts: all
+  remote_user: root
+  become: yes
+  vars:
+    senha: 123456
+    user: joao_teste
+  tasks:
+    - name: Instalar o pacote whois
+      ansible.builtin.apt:
+        name: whois
+        state: present
+        update_cache: true
+
+    - name: Gerar a senha criptografada
+      ansible.builtin.shell: "mkpasswd --method=sha-512 {{ senha }}"
+      register: cripto_pwd
+
+    - name: Adicionar usuário
+      ansible.builtin.user:
+        name: "{{ user }}" 
+        password: "{{ cripto_pwd.stdout }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+
+    - name: Criar diretório .ssh
+      ansible.builtin.file:
+        path: "/home/{{ user }}/.ssh"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        state: directory
+        #recurse: true
+    
+    - name: Adicionar chave publica em authorized_keys
+      ansible.builtin.copy:
+        #! Localização da chave publica no pc local
+        src: /home/joao/.ssh/joao-ansible_rsa.pub
+        # Localização da chave publica no servidor
+        dest: "/home/{{ user }}/.ssh/authorized_keys"
+
+  
+    

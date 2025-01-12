@@ -1,0 +1,7 @@
+- name: Desligar todas as máquinas
+  hosts: all
+  become: yes  # Necessário para executar comandos como root
+  tasks:
+    - name: Enviar comando para desligar as máquinas
+      ansible.builtin.shell: "shutdown -h now"
+      ignore_errors: true  # Ignorar erros no caso de a máquina já estar desligada
